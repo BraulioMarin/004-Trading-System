@@ -25,10 +25,15 @@ const orderStatus = document.getElementById('order-status');
 const noOrder = document.getElementById('no-order');
 const toast = document.getElementById('toast');
 const intervalBtns = document.querySelectorAll('.interval-btn');
+const priceEthchart= document.getElementById('eth-price-chart').getContext('2d');
+const intervalETHBtns= document.querySelectorAll('.eth-interval-btn')
+
 
 // Global variables
 let chart;
 let currentInterval = '1h';
+let chartETH;
+let currentIntervalETH = '1h';
 
 // Initialize the dashboard
 document.addEventListener('DOMContentLoaded', () => {
@@ -56,6 +61,21 @@ function setupEventListeners() {
             btn.classList.add('bg-blue-500', 'text-white');
             currentInterval = btn.dataset.interval;
             fetchPriceHistory(currentInterval);
+        });
+    });
+
+    intervalETHBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.eth-interval-btn').forEach(b => {
+                b.classList.remove('bg-blue-500', 'text-white');
+                b.classList.add('bg-gray-300', 'text-gray-700');
+            });
+            btn.classList.remove('bg-gray-300', 'text-gray-700');
+            btn.classList.add('bg-blue-500', 'text-white');
+            
+            
+            currentIntervalETH = btn.dataset.interval;
+            fetchETHPriceHistory(currentIntervalETH);
         });
     });
 }
@@ -88,7 +108,8 @@ async function checkAPIStatus() {
 function fetchInitialData() {
     fetchAccountInfo();
     fetchCurrentPrice();
-    fetchPriceHistory(currentInterval);
+    fetchPriceHistory(currentInterval);         // BTC
+    fetchETHPriceHistory(currentIntervalETH);   // ETH
 }
 
 // Fetch Account Information
@@ -114,26 +135,36 @@ async function fetchAccountInfo() {
     }
 }
 
-// Fetch Current Price
+// Fetch Current Prices for BTC and ETH
 async function fetchCurrentPrice() {
     try {
-        const response = await fetch(ENDPOINTS.PRICE + '?symbol=BTCUSDT');
+        // BTC price
+        const btcResponse = await fetch(ENDPOINTS.PRICE + '?symbol=BTCUSDT');
+        if (!btcResponse.ok) throw new Error('Failed to fetch BTC price');
+        const btcData = await btcResponse.json();
 
-        if (!response.ok) {
-            throw new Error('Failed to fetch current price');
-        }
+        // ETH price
+        const ethResponse = await fetch(ENDPOINTS.PRICE + '?symbol=ETHUSDT');
+        if (!ethResponse.ok) throw new Error('Failed to fetch ETH price');
+        const ethData = await ethResponse.json();
 
-        const data = await response.json();
-
-        // Update UI with price information
-        currentPrice.textContent = `$${parseFloat(data.price).toLocaleString('en-US', {
+        // Update BTC UI
+        document.getElementById('current-price-btc').textContent = `$${parseFloat(btcData.price).toLocaleString('en-US', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         })}`;
-        priceUpdated.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+        document.getElementById('price-updated-btc').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+
+        // Update ETH UI
+        document.getElementById('current-price-eth').textContent = `$${parseFloat(ethData.price).toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
+        document.getElementById('price-updated-eth').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+
     } catch (error) {
-        showToast('Error loading current price', 'error');
-        console.error('Error fetching price:', error);
+        showToast('Error loading current prices', 'error');
+        console.error('Error fetching current prices:', error);
     }
 }
 
@@ -155,6 +186,19 @@ async function fetchPriceHistory(interval = '1h') {
     } catch (error) {
         showToast('Error loading price history', 'error');
         console.error('Error fetching price history:', error);
+    }
+}
+
+async function fetchETHPriceHistory(interval = '1h') {
+    try {
+        const response = await fetch(`${ENDPOINTS.PRICE_HISTORY}?interval=${interval}&symbol=ETHUSDT`);
+        if (!response.ok) throw new Error('Failed to fetch ETH price history');
+
+        const data = await response.json();
+        updateETHPriceChart(data);
+    } catch (error) {
+        showToast('Error loading ETH price history', 'error');
+        console.error('ETH price history error:', error);
     }
 }
 
@@ -227,6 +271,60 @@ function updatePriceChart(data) {
         }
     });
 }
+
+// Etherum Chart 
+
+function updateETHPriceChart(data) {
+    const labels = data.map(c => new Date(c.open_time).toISOString());
+    const prices = data.map(c => c.close);
+
+    if (chartETH) {
+        chartETH.destroy();
+    }
+
+    const ctx= document.getElementById('eth-price-chart').getContext('2d');
+
+    chartETH = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'ETH/USDT',
+                data: prices,
+                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                borderColor: 'rgba(16, 185, 129, 1)',
+                borderWidth: 2,
+                pointRadius: 1,
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => `$${ctx.parsed.y.toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        })}`
+                    }
+                }
+            },
+            scales: {
+                x: { grid: { display: false } },
+                y: {
+                    position: 'right',
+                    ticks: {
+                        callback: val => '$' + val.toLocaleString()
+                    }
+                }
+            }
+        }
+    });
+}
+
 
 // Handle Order Submission
 async function handleOrderSubmit(event) {

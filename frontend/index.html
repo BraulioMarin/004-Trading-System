@@ -57,11 +57,20 @@
 
         <!-- Current Price Card -->
         <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-semibold mb-4 text-gray-700">Current Price</h2>
-            <div id="price-info" class="text-center">
-                <div class="text-gray-600 mb-2">BTC/USDT</div>
-                <div id="current-price" class="text-3xl font-bold text-gray-800">-</div>
-                <div id="price-updated" class="text-sm text-gray-500 mt-2">Last updated: -</div>
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">Current Prices</h2>
+            <div id="price-info" class="grid grid-cols-1 gap-4 text-center">
+                <!-- BTC Price -->
+                <div>
+                    <div class="text-gray-600 mb-1">BTC/USDT</div>
+                    <div id="current-price-btc" class="text-3xl font-bold text-gray-800">-</div>
+                    <div id="price-updated-btc" class="text-sm text-gray-500 mt-1">Last updated: -</div>
+                </div>
+                <!-- ETH Price -->
+                <div>
+                    <div class="text-gray-600 mb-1">ETH/USDT</div>
+                    <div id="current-price-eth" class="text-3xl font-bold text-gray-800">-</div>
+                    <div id="price-updated-eth" class="text-sm text-gray-500 mt-1">Last updated: -</div>
+                </div>
             </div>
         </div>
 
@@ -125,6 +134,26 @@
         </div>
         <div class="h-64">
             <canvas id="price-chart"></canvas>
+        </div>
+    </div>
+    <!-- Ethereum Price History Chart -->
+    <div class="mt-8 bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-semibold text-gray-700">ETH/USDT Price History</h2>
+            <div class="flex space-x-2">
+                <button data-interval="1h" data-symbol="ETHUSDT"
+                        class="eth-interval-btn px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">1H</button>
+                </button>
+                <button data-interval="4h" data-symbol="ETHUSDT"
+                        class="eth-interval-btn px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">4H
+                </button>
+                <button data-interval="1d" data-symbol="ETHUSDT"
+                        class="eth-interval-btn px-3 py-1 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 text-sm">1D
+                </button>
+            </div>
+        </div>
+        <div class="h-64">
+            <canvas id="eth-price-chart"></canvas>
         </div>
     </div>
 
